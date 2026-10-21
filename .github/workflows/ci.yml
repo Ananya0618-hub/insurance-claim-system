@@ -1,0 +1,34 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - run: npm run setup
+      - run: npm test            # backend unit + API tests, frontend build, UI smoke test
+
+  e2e:
+    needs: test
+    runs-on: ubuntu-latest      # Chrome is preinstalled on GitHub's Ubuntu runners
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - run: npm run setup
+      - run: npm run build
+      - run: npm --prefix e2e ci
+      - name: Start the app (clean database, no demo data)
+        run: |
+          SEED_DEMO=0 npm start &
+          for i in $(seq 1 30); do curl -sf http://localhost:4000/api/health && break; sleep 1; done
+      - run: npm run test:e2e   # Selenium tests in headless Chrome

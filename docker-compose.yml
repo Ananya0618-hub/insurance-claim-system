@@ -1,0 +1,30 @@
+# Runs the whole system: PostgreSQL + the app (API and UI) on http://localhost:4000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: claims
+      POSTGRES_PASSWORD: claims
+      POSTGRES_DB: claims
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U claims -d claims"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://claims:claims@db:5432/claims
+      JWT_SECRET: change-me-before-any-real-use
+      APPEAL_WINDOW_DAYS: "30"
+    ports:
+      - "4000:4000"
+
+volumes:
+  dbdata:

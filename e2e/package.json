@@ -1,0 +1,12 @@
+{
+  "name": "insurance-claim-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test e2e.test.mjs"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.23.0"
+  }
+}
